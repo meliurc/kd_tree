@@ -14,7 +14,7 @@ void printVector(std::vector<int> v){
 }
 
 int main() {
-    int a = 3;
-    int *p = &a;
-    kdTreeNode<int> node(p);
+    int a[3] = {1, 2, 3};
+    kdTreeNode<int> node;
+    node.data = a;
 }
