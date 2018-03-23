@@ -2,6 +2,8 @@
 #include <iostream>
 #include <vector>
 #include "src/treeNode.h"
+#include "src/kdTree.h"
+
 
 void changeVector(std::vector<int> &v){
     v[0] = 100;
@@ -14,22 +16,18 @@ void printVector(std::vector<int> v){
 }
 
 int main() {
-    int a[3] = {1, 2, 3};
-    kdTreeNode<int>* nodeA = new kdTreeNode<int>(a, 3);
-    int b[3] = {2, 3, 4};
-    kdTreeNode<int>* nodeB = new kdTreeNode<int>(b, 3);
-    int c[3] = {3, 4, 5};
-    kdTreeNode<int>* nodeC = new kdTreeNode<int>(c, 3);
-    nodeA->left = nodeB;
-    nodeB->parent = nodeA;
-    nodeA->right = nodeC;
-    nodeC->parent = nodeA;
+    int dim = 2;
+    int wp[12] = {2, 3, 5, 4, 9, 6, 4, 7, 8, 1, 7, 2};
+    int wpLen = sizeof(wp) / sizeof(wp[0]);
 
-    // test distance calculation function.
-    std::cout << "distinct between B and C is: " << nodeC->calculateDistance(nodeB) << std::endl;
+    kdTreeNode<int>* node = (kdTreeNode<int>*) malloc(wpLen/dim * sizeof(kdTreeNode<int>));
 
-    // test get brother function, check whether the following two address is equal or not.
-    std::cout << nodeB << std::endl;
-    std::cout << nodeC->getBrother();
+    for (int i=0; i<(sizeof(wp) / sizeof(wp[0])); i+=dim){
+        node[i/dim] = kdTreeNode<int>(wp+i, 2);
+    }
+
+//    kdTreeNode<int>* root = makeKdTree(node, wpLen/dim, 0, dim);
+    kdTreeNode<int>* md = findMedian(node, node+6, 0);
+    std::cout << md->data[0];
 
 }

@@ -5,7 +5,7 @@ project (test)
 aux_source_directory(. DIR_SRCS)
 
 # 添加 math 子目录
-add_subdirectory(..src)
+add_subdirectory(src)
 
 # 指定生成目标
 add_executable(test ${DIR_SRCS})
