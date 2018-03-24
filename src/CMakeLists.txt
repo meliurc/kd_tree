@@ -7,7 +7,7 @@ set(CMAKE_CXX_STANDARD 11)
 
 set(treeNode treeNode.h)
 set(kdTree kdTree.cpp)
-set(utils utils.cpp)
+set(utils utils.h)
 
 add_library(kd_tree ${treeNode} ${kdTree} ${utils})
 

@@ -3,6 +3,7 @@
 #include <vector>
 #include "src/treeNode.h"
 #include "src/kdTree.h"
+#include "src/utils.h"
 
 
 void changeVector(std::vector<int> &v){
@@ -27,7 +28,7 @@ int main() {
     }
 
     kdTreeNode<int>* root = makeKdTree(node, wpLen/dim, 0, dim);
-    std::cout << root->data[0] << ", " << root->data[1] << std::endl;
+    printTreeByLevel(root);
 
 
 
