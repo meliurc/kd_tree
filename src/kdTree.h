@@ -30,11 +30,11 @@ kdTreeNode<T>* makeKdTree(kdTreeNode<T> *t, int len, int i, int dim);
  */
 template <class T>
 void swap(kdTreeNode<T> *x, kdTreeNode<T> *y) {
-    int len = sizeof(x->data) / sizeof(x->data[0]);
+    int len = x->length;
     T tmp[len];
-    memcpy(tmp, x->data, sizeof(tmp));
-    memcpy(x->data, y->data, sizeof(tmp));
-    memcpy(y->data, tmp, sizeof(tmp));
+    memcpy(tmp, x->data, len*sizeof(T));
+    memcpy(x->data, y->data, len*sizeof(T));
+    memcpy(y->data, tmp, len*sizeof(T));
 }
 
 /*!
@@ -68,7 +68,7 @@ kdTreeNode<T>* findMedian(kdTreeNode<T> *start, kdTreeNode<T> *end, int index)
         swap(pivot, store - 1);
 
         /* when store == median, store is median */
-        if (store->data[index] == md->data[index])
+        if ((store - 1)->data[index] == md->data[index])
             return md;
 
         if (store > md)

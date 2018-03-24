@@ -26,8 +26,9 @@ int main() {
         node[i/dim] = kdTreeNode<int>(wp+i, 2);
     }
 
-//    kdTreeNode<int>* root = makeKdTree(node, wpLen/dim, 0, dim);
-    kdTreeNode<int>* md = findMedian(node, node+6, 0);
-    std::cout << md->data[0];
+    kdTreeNode<int>* root = makeKdTree(node, wpLen/dim, 0, dim);
+    std::cout << root->data[0] << ", " << root->data[1] << std::endl;
+
+
 
 }
