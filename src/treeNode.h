@@ -14,6 +14,7 @@ class kdTreeNode{
 public:
     T* data;
     int length;
+    int partitionDim;        // on which dimension this node partition the space
     double distance;
     kdTreeNode<T>* left;
     kdTreeNode<T>* right;
@@ -27,12 +28,15 @@ public:
 };
 
 template <class T>
-kdTreeNode<T>::kdTreeNode(){}
+kdTreeNode<T>::kdTreeNode(){
+    this->parent = nullptr;
+}
 
 template <class T>
 kdTreeNode<T>::kdTreeNode(T* data, int length) {
     this->data = data;
     this->length = length;
+    this->parent = nullptr;
 }
 
 template <class T>

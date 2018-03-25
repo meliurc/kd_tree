@@ -95,16 +95,17 @@ kdTreeNode<T>* makeKdTree(kdTreeNode<T> *t, int len, int i, int dim)
     if (!len) return nullptr;
 
     if ((root = findMedian(t, t + len, i))) {
+        root->partitionDim = i;
         i = (i + 1) % dim;
         root->left = makeKdTree(t, root - t, i, dim);
         root->right = makeKdTree(root + 1, t + len - (root + 1), i, dim);
     }
 
-//    // add pointer to parent
-//    if(root->left != nullptr)
-//        root->left->parent = root;
-//    if(root->right != nullptr)
-//        root->right->parent = root;
+    // add pointer to parent
+    if(root->left != nullptr)
+        root->left->parent = root;
+    if(root->right != nullptr)
+        root->right->parent = root;
     return root;
 }
 
