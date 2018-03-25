@@ -1,10 +1,10 @@
 
 #include <iostream>
 #include <vector>
-#include "src/treeNode.h"
-#include "src/kdTree.h"
-#include "src/searchKNN.h"
-#include "src/utils.h"
+#include "src/kdTree/treeNode.h"
+#include "src/kdTree/kdTree.h"
+#include "src/kdTree/searchKNN.h"
+#include "src/kdTree/utils.h"
 
 
 int main() {

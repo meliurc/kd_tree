@@ -3,14 +3,9 @@ project(seg)
 
 set(CMAKE_CXX_STANDARD 11)
 
-#add_subdirectory(utils)
+add_subdirectory(kdTree)
+add_subdirectory(segment)
 
-set(treeNode treeNode.h)
-set(kdTree kdTree.cpp)
-set(maxHeap maxHeap.h)
-set(searchKNN searchKNN.h)
-set(utils utils.h)
+add_library(kd_tree)
 
-add_library(kd_tree ${treeNode} ${kdTree} ${maxHeap} ${searchKNN} ${utils})
-
-#target_link_libraries(kd_tree kdTreeUtils)
+target_link_libraries(kd_tree kdTree segment)
