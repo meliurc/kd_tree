@@ -11,4 +11,4 @@ add_subdirectory(src)
 add_executable(seg ${DIR_SRCS})
 
 # 添加链接库
-target_link_libraries(seg kd_tree)
+target_link_libraries(seg Felzenszwalb)

@@ -4,8 +4,11 @@ project(seg)
 set(CMAKE_CXX_STANDARD 11)
 
 add_subdirectory(kdTree)
-add_subdirectory(segment)
 
-add_library(kd_tree)
+set(readpnm pnmfile.h)
+set(image image.h)
+set(misc misc.h)
 
-target_link_libraries(kd_tree kdTree segment)
+add_library(Felzenszwalb ${readpnm} ${image} ${misc})
+
+target_link_libraries(Felzenszwalb kdTree)
