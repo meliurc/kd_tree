@@ -31,6 +31,9 @@ typedef unsigned char uchar;
 
 typedef struct { uchar r, g, b; } rgb;
 
+typedef struct { uchar x, y, r, g, b; } xyrgb;
+
+
 inline bool operator==(const rgb &a, const rgb &b) {
   return ((a.r == b.r) && (a.g == b.g) && (a.b == b.b));
 }

@@ -9,4 +9,6 @@
 
 int main() {
     image<rgb> *input = loadPPM("panda.ppm");
+
+
 }
