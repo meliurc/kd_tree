@@ -20,19 +20,20 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 #define SEGMENT_IMAGE
 
 #include <cstdlib>
-#include <image.h>
-#include <misc.h>
-#include <filter.h>
+#include "image.h"
+#include "misc.h"
+#include "filter.h"
 #include "segment-graph.h"
+#include "kdTree/treeNode.h"
 
 // random color
 rgb random_rgb(){ 
   rgb c;
   double r;
   
-  c.r = (uchar)random();
-  c.g = (uchar)random();
-  c.b = (uchar)random();
+  c.r = (uchar)rand();
+  c.g = (uchar)rand();
+  c.b = (uchar)rand();
 
   return c;
 }
@@ -45,6 +46,46 @@ static inline float diff(image<float> *r, image<float> *g, image<float> *b,
 	      square(imRef(b, x1, y1)-imRef(b, x2, y2)));
 }
 
+
+// generate edges
+edge* generate_edges(image<float>* smooth_r, image<float>* smooth_g, image<float>* smooth_b,
+                     int width, int height, int &num){
+    edge* edges = new edge[width*height*4];
+    for (int y = 0; y < height; y++) {
+        for (int x = 0; x < width; x++) {
+            if (x < width-1) {
+                edges[num].a = y * width + x;
+                edges[num].b = y * width + (x+1);
+                edges[num].w = diff(smooth_r, smooth_g, smooth_b, x, y, x+1, y);
+                num++;
+            }
+
+            if (y < height-1) {
+                edges[num].a = y * width + x;
+                edges[num].b = (y+1) * width + x;
+                edges[num].w = diff(smooth_r, smooth_g, smooth_b, x, y, x, y+1);
+                num++;
+            }
+
+            if ((x < width-1) && (y < height-1)) {
+                edges[num].a = y * width + x;
+                edges[num].b = (y+1) * width + (x+1);
+                edges[num].w = diff(smooth_r, smooth_g, smooth_b, x, y, x+1, y+1);
+                num++;
+            }
+
+            if ((x < width-1) && (y > 0)) {
+                edges[num].a = y * width + x;
+                edges[num].b = (y-1) * width + (x+1);
+                edges[num].w = diff(smooth_r, smooth_g, smooth_b, x, y, x+1, y-1);
+                num++;
+            }
+        }
+    }
+    return edges;
+}
+
+
 /*
  * Segment an image
  *
@@ -56,99 +97,89 @@ static inline float diff(image<float> *r, image<float> *g, image<float> *b,
  * min_size: minimum component size (enforced by post-processing stage).
  * num_ccs: number of connected components in the segmentation.
  */
-image<rgb> *segment_image(image<rgb> *im, float sigma, float c, int min_size,
+template <class T>
+image<T> *segment_image(image<T> *im, float sigma, float c, int min_size,
 			  int *num_ccs) {
-  int width = im->width();
-  int height = im->height();
+    int num = 0;
+    int width = im->width();
+    int height = im->height();
 
-  image<float> *r = new image<float>(width, height);
-  image<float> *g = new image<float>(width, height);
-  image<float> *b = new image<float>(width, height);
+    image<float> *r = new image<float>(width, height);
+    image<float> *g = new image<float>(width, height);
+    image<float> *b = new image<float>(width, height);
 
-  // smooth each color channel  
-  for (int y = 0; y < height; y++) {
-    for (int x = 0; x < width; x++) {
-      imRef(r, x, y) = imRef(im, x, y).r;
-      imRef(g, x, y) = imRef(im, x, y).g;
-      imRef(b, x, y) = imRef(im, x, y).b;
+    // smooth each color channel
+    for (int y = 0; y < height; y++) {
+        for (int x = 0; x < width; x++) {
+            imRef(r, x, y) = imRef(im, x, y).r;
+            imRef(g, x, y) = imRef(im, x, y).g;
+            imRef(b, x, y) = imRef(im, x, y).b;
+        }
     }
-  }
-  image<float> *smooth_r = smooth(r, sigma);
-  image<float> *smooth_g = smooth(g, sigma);
-  image<float> *smooth_b = smooth(b, sigma);
-  delete r;
-  delete g;
-  delete b;
- 
-  // build graph
-  edge *edges = new edge[width*height*4];
-  int num = 0;
-  for (int y = 0; y < height; y++) {
-    for (int x = 0; x < width; x++) {
-      if (x < width-1) {
-	edges[num].a = y * width + x;
-	edges[num].b = y * width + (x+1);
-	edges[num].w = diff(smooth_r, smooth_g, smooth_b, x, y, x+1, y);
-	num++;
-      }
+    image<float> *smooth_r = smooth(r, sigma);
+    image<float> *smooth_g = smooth(g, sigma);
+    image<float> *smooth_b = smooth(b, sigma);
+    delete r; delete g; delete b;
 
-      if (y < height-1) {
-	edges[num].a = y * width + x;
-	edges[num].b = (y+1) * width + x;
-	edges[num].w = diff(smooth_r, smooth_g, smooth_b, x, y, x, y+1);
-	num++;
-      }
+    if (std::is_same<T, xyrgb>::value){
+        size_t pixel_num = width*height;
+        kdTreeNode<double>* node = (kdTreeNode<double>*) malloc(pixel_num * sizeof(kdTreeNode<double>));
+        double* data = (double*) malloc(5*pixel_num*sizeof(double_t));
+        for (int i=0; i<pixel_num; i++){
+            int x = i / width;             // x, row number start from 0
+            int y = i % width;             // y, column number start from 0
+            *(data + i) = x/height;
+            *(data + i+1) = y/width;
+            *(data + i+2) = imRef(smooth_r, x, y);
+            *(data + i+3) = imRef(smooth_g, x, y);
+            *(data + i+4) = imRef(smooth_b, x, y);
 
-      if ((x < width-1) && (y < height-1)) {
-	edges[num].a = y * width + x;
-	edges[num].b = (y+1) * width + (x+1);
-	edges[num].w = diff(smooth_r, smooth_g, smooth_b, x, y, x+1, y+1);
-	num++;
-      }
-
-      if ((x < width-1) && (y > 0)) {
-	edges[num].a = y * width + x;
-	edges[num].b = (y-1) * width + (x+1);
-	edges[num].w = diff(smooth_r, smooth_g, smooth_b, x, y, x+1, y-1);
-	num++;
-      }
+        }
     }
-  }
-  delete smooth_r;
-  delete smooth_g;
-  delete smooth_b;
 
-  // segment
-  universe *u = segment_graph(width*height, num, edges, c);
-  
-  // post process small components
-  for (int i = 0; i < num; i++) {
+
+
+
+
+
+    edge* edges = generate_edges(smooth_r, smooth_g, smooth_b, width, height, num);
+
+    delete smooth_r;
+    delete smooth_g;
+    delete smooth_b;
+
+    // segment
+    universe *u = segment_graph(width*height, num, edges, c);
+
+    // post process small components
+    for (int i = 0; i < num; i++) {
     int a = u->find(edges[i].a);
     int b = u->find(edges[i].b);
     if ((a != b) && ((u->size(a) < min_size) || (u->size(b) < min_size)))
-      u->join(a, b);
-  }
-  delete [] edges;
-  *num_ccs = u->num_sets();
-
-  image<rgb> *output = new image<rgb>(width, height);
-
-  // pick random colors for each component
-  rgb *colors = new rgb[width*height];
-  for (int i = 0; i < width*height; i++)
-    colors[i] = random_rgb();
-  
-  for (int y = 0; y < height; y++) {
-    for (int x = 0; x < width; x++) {
-      int comp = u->find(y * width + x);
-      imRef(output, x, y) = colors[comp];
+        u->join(a, b);
     }
-  }  
+    delete [] edges;
+    *num_ccs = u->num_sets();
 
-  delete [] colors;  
-  delete u;
+    image<rgb> *output = new image<rgb>(width, height);
 
-  return output;
+    // pick random colors for each component
+    rgb *colors = new rgb[width*height];
+    for (int i = 0; i < width*height; i++)
+        colors[i] = random_rgb();
+
+    for (int y = 0; y < height; y++) {
+    for (int x = 0; x < width; x++) {
+        int comp = u->find(y * width + x);
+        imRef(output, x, y) = colors[comp];
+    }
+    }
+
+    delete [] colors;
+    delete u;
+
+    return output;
 }
+
 
 #endif
