@@ -49,17 +49,19 @@ std::vector<kdTreeNode<T>*> searchKNN(kdTreeNode<T>* root, kdTreeNode<T>* q, int
 
     while(almostNNode != nullptr)
     {
-        double curD = q->calculateDistance(almostNNode);//最近近似点与查询点的距离 也就是球体的半径
+        float curD = q->calculateDistance(almostNNode);//最近近似点与查询点的距离 也就是球体的半径
         almostNNode->distance = curD;
         maintainMaxKHeap(knnList, almostNNode, k);
 
-        if((almostNNode->parent != nullptr) && (curD > fabs(q->data[almostNNode->parent->partitionDim] - almostNNode->parent->data[almostNNode->parent->partitionDim])))
-            {
+        if((almostNNode->parent != nullptr) &&
+           (curD > fabs(q->data[almostNNode->parent->partitionDim]
+                        - almostNNode->parent->data[almostNNode->parent->partitionDim])))
+        {
             //这样可能在另一个子区域中存在更加近似的点
             kdTreeNode<T>* brother = almostNNode->getBrother();
             brother->distance = q->calculateDistance(brother);
             maintainMaxKHeap(knnList, brother, k);
-            }
+        }
 
         almostNNode=almostNNode->parent; // 返回上一级
     }

@@ -82,7 +82,7 @@ kdTreeNode<T>* findMedian(kdTreeNode<T> *start, kdTreeNode<T> *end, int index)
  *
  * @tparam T
  * @param t
- * @param len
+ * @param len, number of nodes or number of pixels in an image
  * @param i
  * @param dim
  * @return

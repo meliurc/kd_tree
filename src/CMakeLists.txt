@@ -10,6 +10,9 @@ set(image image.h)
 set(misc misc.h)
 set(seg_img segment-image.h)
 
-add_library(Felzenszwalb ${readpnm} ${image} ${misc} ${seg_img})
+aux_source_directory(. SEG_DIR_SRCS)
+
+#add_library(Felzenszwalb ${readpnm} ${image} ${misc} ${seg_img})
+add_library(Felzenszwalb ${SEG_DIR_SRCS})
 
 target_link_libraries(Felzenszwalb kdTree)
