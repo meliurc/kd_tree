@@ -46,6 +46,10 @@ static inline float diff(image<float> *r, image<float> *g, image<float> *b,
 	      square(imRef(b, x1, y1)-imRef(b, x2, y2)));
 }
 
+template <class T>
+kdTreeNode<T>* init_nodes(){
+
+}
 
 // generate edges
 edge* generate_edges(image<float>* smooth_r, image<float>* smooth_g, image<float>* smooth_b,
@@ -122,18 +126,21 @@ image<T> *segment_image(image<T> *im, float sigma, float c, int min_size,
     delete r; delete g; delete b;
 
     if (std::is_same<T, xyrgb>::value){
+        int dim = 5;
         size_t pixel_num = width*height;
         kdTreeNode<double>* node = (kdTreeNode<double>*) malloc(pixel_num * sizeof(kdTreeNode<double>));
-        double* data = (double*) malloc(5*pixel_num*sizeof(double_t));
+        double* data = (double*) malloc(dim*pixel_num*sizeof(double_t));
         for (int i=0; i<pixel_num; i++){
-            int x = i / width;             // x, row number start from 0
-            int y = i % width;             // y, column number start from 0
-            *(data + i) = x/height;
-            *(data + i+1) = y/width;
-            *(data + i+2) = imRef(smooth_r, x, y);
-            *(data + i+3) = imRef(smooth_g, x, y);
-            *(data + i+4) = imRef(smooth_b, x, y);
-
+            int x = i / width;                           // x, row number start from 0
+            int y = i % width;                           // y, column number start from 0
+            *(data + i) = x/height;                      // normalize x
+            *(data + i+1) = y/width;                     // normalize y
+            *(data + i+2) = imRef(smooth_r, x, y);       // smoothed r
+            *(data + i+3) = imRef(smooth_g, x, y);       // smoothed g
+            *(data + i+4) = imRef(smooth_b, x, y);       // smoothed b
+        }
+        for (int i=0; i<pixel_num*dim; i+=dim){
+            node[i/dim] = kdTreeNode<double>(data+i, dim);
         }
     }
 
