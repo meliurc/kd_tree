@@ -15,7 +15,7 @@ public:
     T* data;
     int length;
     int partitionDim;        // on which dimension this node partition the space
-    double distance;
+    float distance;
     kdTreeNode<T>* left;
     kdTreeNode<T>* right;
     kdTreeNode<T>* parent;
@@ -23,7 +23,7 @@ public:
     kdTreeNode();
     kdTreeNode(T* data, int length);
     ~kdTreeNode();
-    double calculateDistance(kdTreeNode<T>* anotherNode);
+    float calculateDistance(kdTreeNode<T>* anotherNode);
     kdTreeNode<T>* getBrother();
 };
 
@@ -50,8 +50,8 @@ kdTreeNode<T>::~kdTreeNode(){}
  * @return distance
  */
 template <class T>
-double kdTreeNode<T>::calculateDistance(kdTreeNode<T>* anotherNode){
-    double distance = 0;
+float kdTreeNode<T>::calculateDistance(kdTreeNode<T>* anotherNode){
+    float distance = 0;
     for (int i=0; i<this->length; i++) {
         distance += pow((this->data[i] - anotherNode->data[i]), 2);
     }

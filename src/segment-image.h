@@ -20,17 +20,19 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 #define SEGMENT_IMAGE
 
 #include <cstdlib>
+#include <cmath>
 #include "image.h"
 #include "misc.h"
 #include "filter.h"
 #include "segment-graph.h"
 #include "kdTree/treeNode.h"
 #include "kdTree/kdTree.h"
+#include "kdTree/searchKNN.h"
 
 // random color
 rgb random_rgb(){ 
   rgb c;
-  double r;
+  float r;
   
   c.r = (uchar)rand();
   c.g = (uchar)rand();
@@ -57,15 +59,15 @@ static inline float diff(image<float> *r, image<float> *g, image<float> *b,
  * @return
  */
 
-kdTreeNode<double>* init_nodes(image<float>* smooth_r, image<float>* smooth_g, image<float>* smooth_b,
+kdTreeNode<float>* init_nodes(image<float>* smooth_r, image<float>* smooth_g, image<float>* smooth_b,
                                int width, int height){
     int dim = 5;
     size_t pixel_num = width*height;
-    kdTreeNode<double>* node = (kdTreeNode<double>*) malloc(pixel_num * sizeof(kdTreeNode<double>));
-    double* data = (double*) malloc(dim*pixel_num*sizeof(double_t));
+    kdTreeNode<float>* node = (kdTreeNode<float>*) malloc(pixel_num * sizeof(kdTreeNode<float>));
+    float* data = (float*) malloc(dim*pixel_num*sizeof(float));
     for (int i=0; i<pixel_num; i++){
-        int x = i / width;                               // x, row number start from 0
-        int y = i % width;                               // y, column number start from 0
+        float x = i / width;                               // x, row number start from 0
+        float y = i % width;                               // y, column number start from 0
         *(data + i) = x/height;
         *(data + i+1) = y/width;
         *(data + i+2) = imRef(smooth_r, x, y);
@@ -73,7 +75,7 @@ kdTreeNode<double>* init_nodes(image<float>* smooth_r, image<float>* smooth_g, i
         *(data + i+4) = imRef(smooth_b, x, y);
     }
     for (int i=0; i<pixel_num*dim; i+=dim){
-        node[i/dim] = kdTreeNode<double>(data+i, dim);
+        node[i/dim] = kdTreeNode<float>(data+i, dim);
     }
 
     return node;
@@ -82,6 +84,7 @@ kdTreeNode<double>* init_nodes(image<float>* smooth_r, image<float>* smooth_g, i
 // generate edges
 edge* generate_edges(image<float>* smooth_r, image<float>* smooth_g, image<float>* smooth_b,
                      int width, int height, int &num){
+    num = 0;
     edge* edges = new edge[width*height*4];
     for (int y = 0; y < height; y++) {
         for (int x = 0; x < width; x++) {
@@ -132,7 +135,8 @@ edge* generate_edges(image<float>* smooth_r, image<float>* smooth_g, image<float
 template <class T>
 image<T> *segment_image(image<T> *im, float sigma, float c, int min_size,
 			  int *num_ccs) {
-    int num = 0;
+    edge* edges;
+    int edge_num = 0;
     int width = im->width();
     int height = im->height();
     size_t pixel_num = width*height;
@@ -154,33 +158,44 @@ image<T> *segment_image(image<T> *im, float sigma, float c, int min_size,
     image<float> *smooth_b = smooth(b, sigma);
     delete r; delete g; delete b;
 
-    // initialize kd_tree node when T is xyrgb
+    // initialize kd_tree node when T is struct xyrgb
     if (std::is_same<T, xyrgb>::value) {
+        int K = 10;
         int dim = 5;
-        kdTreeNode<double> *node = init_nodes(smooth_r, smooth_g, smooth_b, width, height);
-        kdTreeNode<double> *root = makeKdTree(node, pixel_num, 0, dim);
+        kdTreeNode<float> *node = init_nodes(smooth_r, smooth_g, smooth_b, width, height);
+        kdTreeNode<float> *root = makeKdTree(node, pixel_num, 0, dim);
 
+        // generate edges
+        edges = new edge[K*pixel_num];
+        for (int i=0; i<pixel_num; i++){
+            kdTreeNode<float> *queryNodeP = node + i;
+            std::vector<kdTreeNode<float>*> nearestKNode = searchKNN(root, queryNodeP, K);
+            for (int j=0; j<nearestKNode.size(); j++){
+                (edges + i*K + j)->a = (int)round(queryNodeP->data[0]*height*width + queryNodeP->data[1]*height);
+                (edges + i*K + j)->b = (int)round(nearestKNode[j]->data[0]*height*width + nearestKNode[j]->data[1]*height);
+                (edges + i*K + j)->w = nearestKNode[j]->distance;
+                edge_num++;
+            }
+        }
     }
-
-
-
-
-
-    edge* edges = generate_edges(smooth_r, smooth_g, smooth_b, width, height, num);
+    // or generate edges directly
+    else{
+        edges = generate_edges(smooth_r, smooth_g, smooth_b, width, height, edge_num);
+    }
 
     delete smooth_r;
     delete smooth_g;
     delete smooth_b;
 
     // segment
-    universe *u = segment_graph(width*height, num, edges, c);
+    universe *u = segment_graph(pixel_num, edge_num, edges, c);
 
     // post process small components
-    for (int i = 0; i < num; i++) {
-    int a = u->find(edges[i].a);
-    int b = u->find(edges[i].b);
-    if ((a != b) && ((u->size(a) < min_size) || (u->size(b) < min_size)))
-        u->join(a, b);
+    for (int i = 0; i < edge_num; i++) {
+        int a = u->find(edges[i].a);
+        int b = u->find(edges[i].b);
+        if ((a != b) && ((u->size(a) < min_size) || (u->size(b) < min_size)))
+            u->join(a, b);
     }
     delete [] edges;
     *num_ccs = u->num_sets();
@@ -193,10 +208,10 @@ image<T> *segment_image(image<T> *im, float sigma, float c, int min_size,
         colors[i] = random_rgb();
 
     for (int y = 0; y < height; y++) {
-    for (int x = 0; x < width; x++) {
-        int comp = u->find(y * width + x);
-        imRef(output, x, y) = colors[comp];
-    }
+        for (int x = 0; x < width; x++) {
+            int comp = u->find(y * width + x);
+            imRef(output, x, y) = colors[comp];
+        }
     }
 
     delete [] colors;
