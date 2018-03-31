@@ -132,9 +132,8 @@ edge* generate_edges(image<float>* smooth_r, image<float>* smooth_g, image<float
  * min_size: minimum component size (enforced by post-processing stage).
  * num_ccs: number of connected components in the segmentation.
  */
-template <class T>
-image<T> *segment_image(image<T> *im, float sigma, float c, int min_size,
-			  int *num_ccs) {
+image<rgb> *segment_image(image<rgb> *im, float sigma, float c, int min_size,
+			  int *num_ccs, char* type) {
     edge* edges;
     int edge_num = 0;
     int width = im->width();
@@ -159,7 +158,7 @@ image<T> *segment_image(image<T> *im, float sigma, float c, int min_size,
     delete r; delete g; delete b;
 
     // initialize kd_tree node when T is struct xyrgb
-    if (std::is_same<T, xyrgb>::value) {
+    if (strcmp(type, "xyrgb")) {
         int K = 10;
         int dim = 5;
         kdTreeNode<float> *node = init_nodes(smooth_r, smooth_g, smooth_b, width, height);
