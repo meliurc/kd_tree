@@ -187,45 +187,79 @@ image<rgb> *segment_image(image<rgb> *im, float sigma, float c, int min_size,
         }
     }
     // or generate edges directly
-    else{
-        edges = generate_edges(smooth_r, smooth_g, smooth_b, width, height, edge_num);
+//    else{
+//        edges = generate_edges(smooth_r, smooth_g, smooth_b, width, height, edge_num);
+//    }
+
+    edges = new edge[width*height*4];
+    int num = 0;
+    for (int y = 0; y < height; y++) {
+        for (int x = 0; x < width; x++) {
+            if (x < width-1) {
+                edges[num].a = y * width + x;
+                edges[num].b = y * width + (x+1);
+                edges[num].w = diff(smooth_r, smooth_g, smooth_b, x, y, x+1, y);
+                num++;
+            }
+
+            if (y < height-1) {
+                edges[num].a = y * width + x;
+                edges[num].b = (y+1) * width + x;
+                edges[num].w = diff(smooth_r, smooth_g, smooth_b, x, y, x, y+1);
+                num++;
+            }
+
+            if ((x < width-1) && (y < height-1)) {
+                edges[num].a = y * width + x;
+                edges[num].b = (y+1) * width + (x+1);
+                edges[num].w = diff(smooth_r, smooth_g, smooth_b, x, y, x+1, y+1);
+                num++;
+            }
+
+            if ((x < width-1) && (y > 0)) {
+                edges[num].a = y * width + x;
+                edges[num].b = (y-1) * width + (x+1);
+                edges[num].w = diff(smooth_r, smooth_g, smooth_b, x, y, x+1, y-1);
+                num++;
+            }
+        }
     }
 
-//    delete smooth_r;
-//    delete smooth_g;
-//    delete smooth_b;
-//
-//    // segment
-//    universe *u = segment_graph(pixel_num, edge_num, edges, c);
-//
-//    // post process small components
-//    for (int i = 0; i < edge_num; i++) {
-//        int a = u->find(edges[i].a);
-//        int b = u->find(edges[i].b);
-//        if ((a != b) && ((u->size(a) < min_size) || (u->size(b) < min_size)))
-//            u->join(a, b);
-//    }
-//    delete [] edges;
-//    *num_ccs = u->num_sets();
-//
-//    image<rgb> *output = new image<rgb>(width, height);
-//
-//    // pick random colors for each component
-//    rgb *colors = new rgb[width*height];
-//    for (int i = 0; i < width*height; i++)
-//        colors[i] = random_rgb();
-//
-//    for (int y = 0; y < height; y++) {
-//        for (int x = 0; x < width; x++) {
-//            int comp = u->find(y * width + x);
-//            imRef(output, x, y) = colors[comp];
-//        }
-//    }
-//
-//    delete [] colors;
-//    delete u;
+    delete smooth_r;
+    delete smooth_g;
+    delete smooth_b;
 
-    return nullptr;
+    // segment
+    universe *u = segment_graph(pixel_num, edge_num, edges, c);
+
+    // post process small components
+    for (int i = 0; i < edge_num; i++) {
+        int a = u->find(edges[i].a);
+        int b = u->find(edges[i].b);
+        if ((a != b) && ((u->size(a) < min_size) || (u->size(b) < min_size)))
+            u->join(a, b);
+    }
+    delete [] edges;
+    *num_ccs = u->num_sets();
+
+    image<rgb> *output = new image<rgb>(width, height);
+
+    // pick random colors for each component
+    rgb *colors = new rgb[width*height];
+    for (int i = 0; i < width*height; i++)
+        colors[i] = random_rgb();
+
+    for (int y = 0; y < height; y++) {
+        for (int x = 0; x < width; x++) {
+            int comp = u->find(y * width + x);
+            imRef(output, x, y) = colors[comp];
+        }
+    }
+
+    delete [] colors;
+    delete u;
+
+    return output;
 }
 
 
