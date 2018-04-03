@@ -15,16 +15,17 @@ kdTreeNode<T>* searchLeaf(kdTreeNode<T>* root, kdTreeNode<T>* q)
         if(q->data[index] < leaf->data[index])
         {
             next = leaf->left;//进入左侧
-        }else if(q->data[index] > leaf->data[index])
+        }else if(q->data[index] >= leaf->data[index])
         {
             next = leaf->right;
-        }else{
-            //当取到中位数时  判断左右子区域哪个更加近
-            if(q->calculateDistance(leaf->left) < q->calculateDistance(leaf->right))
-                next = leaf->left;
-            else
-                next = leaf->right;
         }
+//        else{
+//            //当取到中位数时  判断左右子区域哪个更加近
+//            if(q->calculateDistance(leaf->left) < q->calculateDistance(leaf->right))
+//                next = leaf->left;
+//            else
+//                next = leaf->right;
+//        }
 
         // 结束了嘛，没结束继续呀
         if(next == nullptr)
