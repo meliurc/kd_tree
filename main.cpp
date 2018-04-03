@@ -15,7 +15,7 @@ int main() {
     float sigma = 0.5;
     float k = 500;
     int min_size = 20;
-    char type[6] = "xyrgb";
+    char type[6] = "rgb";
 
     image<rgb> *input = loadPPM(input_image);
 
