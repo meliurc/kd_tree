@@ -68,11 +68,17 @@ kdTreeNode<float>* init_nodes(image<float>* smooth_r, image<float>* smooth_g, im
     for (int i=0; i<pixel_num; i++){
         int x = i / width;                                      // x, row number start from 0
         int y = i % width;                                      // y, column number start from 0
-        *(data + dim*i)   = x / (float)height;                          // normalize x by height
-        *(data + dim*i+1) = y / (float)width;                         // normalize y by width
-        *(data + dim*i+2) = imRef(smooth_r, y, x) / (float)255;       // normalize r by 255
-        *(data + dim*i+3) = imRef(smooth_g, y, x) / (float)255;       // normalize g by 255
-        *(data + dim*i+4) = imRef(smooth_b, y, x) / (float)255;       // normalize b by 255
+//        *(data + dim*i)   = x / (float)height;                          // normalize x by height
+//        *(data + dim*i+1) = y / (float)width;                         // normalize y by width
+//        *(data + dim*i+2) = imRef(smooth_r, y, x) / (float)255;       // normalize r by 255
+//        *(data + dim*i+3) = imRef(smooth_g, y, x) / (float)255;       // normalize g by 255
+//        *(data + dim*i+4) = imRef(smooth_b, y, x) / (float)255;       // normalize b by 255
+
+        *(data + dim*i)   = x;                           // normalize x by height
+        *(data + dim*i+1) = y;                           // normalize y by width
+        *(data + dim*i+2) = imRef(smooth_r, y, x);       // normalize r by 255
+        *(data + dim*i+3) = imRef(smooth_g, y, x);       // normalize g by 255
+        *(data + dim*i+4) = imRef(smooth_b, y, x);       // normalize b by 255
     }
     for (int i=0; i<pixel_num*dim; i+=dim){
         node[i/dim] = kdTreeNode<float>(data+i, dim);
@@ -134,7 +140,7 @@ edge* generate_edges(image<float>* smooth_r, image<float>* smooth_g, image<float
  */
 image<rgb> *segment_image(image<rgb> *im, float sigma, float c, int min_size,
 			  int *num_ccs, const char* type) {
-    edge* edges;
+//    edge* edges;
     int edge_num = 0;
     int width = im->width();
     int height = im->height();
@@ -152,6 +158,7 @@ image<rgb> *segment_image(image<rgb> *im, float sigma, float c, int min_size,
             imRef(b, x, y) = imRef(im, x, y).b;
         }
     }
+
     image<float> *smooth_r = smooth(r, sigma);
     image<float> *smooth_g = smooth(g, sigma);
     image<float> *smooth_b = smooth(b, sigma);
@@ -159,21 +166,21 @@ image<rgb> *segment_image(image<rgb> *im, float sigma, float c, int min_size,
 
 //    std::cout << imRef(smooth_r, 0, 487);
 
-    // initialize kd_tree node when T is struct xyrgb
-    if (strcmp(type, "xyrgb") == 0) {
-        int K = 10;
-        int dim = 5;
-        kdTreeNode<float> *node = init_nodes(smooth_r, smooth_g, smooth_b, width, height);
-        kdTreeNode<float> *root = makeKdTree(node, pixel_num, 0, dim);
-
-        // generate edges
-        edges = new edge[K*pixel_num];
-        kdTreeNode<float> *queryNodeP = node;
-        std::vector<kdTreeNode<float>*> nearestKNode = searchKNN(root, queryNodeP, K);
-        for (int j=0; j<nearestKNode.size(); j++){
-            (edges + 0*K + j)->a = (int)round(queryNodeP->data[0]*height*width + queryNodeP->data[1]*height);
-            (edges + 0*K + j)->b = (int)round(nearestKNode[j]->data[0]*height*width + nearestKNode[j]->data[1]*height);
-            (edges + 0*K + j)->w = nearestKNode[j]->distance;
+//    // initialize kd_tree node when T is struct xyrgb
+//    if (strcmp(type, "xyrgb") == 0) {
+//        int K = 10;
+//        int dim = 5;
+//        kdTreeNode<float> *node = init_nodes(smooth_r, smooth_g, smooth_b, width, height);
+//        kdTreeNode<float> *root = makeKdTree(node, pixel_num, 0, dim);
+//
+//        // generate edges
+//        edges = new edge[K*pixel_num];
+//        kdTreeNode<float> *queryNodeP = node;
+//        std::vector<kdTreeNode<float>*> nearestKNode = searchKNN(root, queryNodeP, K);
+//        for (int j=0; j<nearestKNode.size(); j++){
+//            (edges + 0*K + j)->a = (int)round(queryNodeP->data[0]*height*width + queryNodeP->data[1]*height);
+//            (edges + 0*K + j)->b = (int)round(nearestKNode[j]->data[0]*height*width + nearestKNode[j]->data[1]*height);
+//            (edges + 0*K + j)->w = nearestKNode[j]->distance;
 
 //        for (int i=0; i<pixel_num; i++){
 //            kdTreeNode<float> *queryNodeP = node + i;
@@ -184,46 +191,74 @@ image<rgb> *segment_image(image<rgb> *im, float sigma, float c, int min_size,
 //                (edges + i*K + j)->w = nearestKNode[j]->distance;
 //                edge_num++;
 //            }
-        }
-    }
+//        }
+//    }
     // or generate edges directly
 //    else{
 //        edges = generate_edges(smooth_r, smooth_g, smooth_b, width, height, edge_num);
 //    }
 
-    edges = new edge[width*height*4];
-    int num = 0;
-    for (int y = 0; y < height; y++) {
-        for (int x = 0; x < width; x++) {
-            if (x < width-1) {
-                edges[num].a = y * width + x;
-                edges[num].b = y * width + (x+1);
-                edges[num].w = diff(smooth_r, smooth_g, smooth_b, x, y, x+1, y);
-                num++;
-            }
+//    image<float> *smooth_r = r;
+//    image<float> *smooth_g = g;
+//    image<float> *smooth_b = b;
+//    delete r; delete g; delete b;
 
-            if (y < height-1) {
-                edges[num].a = y * width + x;
-                edges[num].b = (y+1) * width + x;
-                edges[num].w = diff(smooth_r, smooth_g, smooth_b, x, y, x, y+1);
-                num++;
-            }
+////    std::cout << imRef(smooth_r, 0, 487);
+//
+//    // initialize kd_tree node when T is struct xyrgb
+//    if (strcmp(type, "xyrgb") == 0) {
+//        int K = 10;
+//        int dim = 5;
+//        kdTreeNode<float> *node = init_nodes(smooth_r, smooth_g, smooth_b, width, height);
+//        kdTreeNode<float> *root = makeKdTree(node, pixel_num, 0, dim);
+//
+//        // generate edges
+//        edges = new edge[K*pixel_num];
+//        kdTreeNode<float> *queryNodeP = node;
+//        std::vector<kdTreeNode<float>*> nearestKNode = searchKNN(root, queryNodeP, K);
+//        for (int j=0; j<nearestKNode.size(); j++){
+//            (edges + 0*K + j)->a = (int)round(queryNodeP->data[0]*height*width + queryNodeP->data[1]*height);
+//            (edges + 0*K + j)->b = (int)round(nearestKNode[j]->data[0]*height*width + nearestKNode[j]->data[1]*height);
+//            (edges + 0*K + j)->w = nearestKNode[j]->distance;
+//
+////        for (int i=0; i<pixel_num; i++){
+////            kdTreeNode<float> *queryNodeP = node + i;
+////            std::vector<kdTreeNode<float>*> nearestKNode = searchKNN(root, queryNodeP, K);
+////            for (int j=0; j<nearestKNode.size(); j++){
+////                (edges + i*K + j)->a = (int)round(queryNodeP->data[0]*height*width + queryNodeP->data[1]*height);
+////                (edges + i*K + j)->b = (int)round(nearestKNode[j]->data[0]*height*width + nearestKNode[j]->data[1]*height);
+////                (edges + i*K + j)->w = nearestKNode[j]->distance;
+////                edge_num++;
+////            }
+//        }
+//    }
+//    // or generate edges directly
+//    else{
+//        edges = generate_edges(smooth_r, smooth_g, smooth_b, width, height, edge_num);
+//    }
 
-            if ((x < width-1) && (y < height-1)) {
-                edges[num].a = y * width + x;
-                edges[num].b = (y+1) * width + (x+1);
-                edges[num].w = diff(smooth_r, smooth_g, smooth_b, x, y, x+1, y+1);
-                num++;
-            }
+    int K = 10;
+    int dim = 5;
+    kdTreeNode<float> *node = init_nodes(smooth_r, smooth_g, smooth_b, width, height);
+    kdTreeNode<float> *root = makeKdTree(node, pixel_num, 0, dim);
 
-            if ((x < width-1) && (y > 0)) {
-                edges[num].a = y * width + x;
-                edges[num].b = (y-1) * width + (x+1);
-                edges[num].w = diff(smooth_r, smooth_g, smooth_b, x, y, x+1, y-1);
-                num++;
-            }
+    edge* edges = new edge[K*pixel_num];
+    for (int i=0; i<pixel_num; i++) {
+        kdTreeNode<float> *queryNodeP = node + i;
+        std::vector<kdTreeNode<float> *> nearestKNode = searchKNN(root, queryNodeP, K);
+        for (int j = 0; j < nearestKNode.size(); j++) {
+//            (edges + i * K + j)->a = (int) round(queryNodeP->data[0] * height * width + queryNodeP->data[1] * height);
+//            (edges + i * K + j)->b = (int) round(nearestKNode[j]->data[0] * height * width + nearestKNode[j]->data[1] * height);
+//            (edges + i * K + j)->w = nearestKNode[j]->distance;
+//            edge_num++;
+
+            (edges + i * K + j)->a = (int) round(queryNodeP->data[0] * width + queryNodeP->data[1]);
+            (edges + i * K + j)->b = (int) round(nearestKNode[j]->data[0] * width + nearestKNode[j]->data[1]);
+            (edges + i * K + j)->w = nearestKNode[j]->distance;
+            edge_num++;
         }
     }
+
 
     delete smooth_r;
     delete smooth_g;

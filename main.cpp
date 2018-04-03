@@ -22,5 +22,6 @@ int main() {
     int num_ccs;
     image<rgb> *seg = segment_image(input, sigma, k, min_size, &num_ccs, type);
     savePPM(seg, output_image);
+    std::cout << num_ccs;
 
 }

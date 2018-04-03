@@ -30,6 +30,8 @@ public:
 template <class T>
 kdTreeNode<T>::kdTreeNode(){
     this->parent = nullptr;
+    this->left = nullptr;
+    this->right = nullptr;
 }
 
 template <class T>
@@ -37,6 +39,8 @@ kdTreeNode<T>::kdTreeNode(T* data, int length) {
     this->data = data;
     this->length = length;
     this->parent = nullptr;
+    this->left = nullptr;
+    this->right = nullptr;
 }
 
 template <class T>

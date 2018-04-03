@@ -60,8 +60,10 @@ std::vector<kdTreeNode<T>*> searchKNN(kdTreeNode<T>* root, kdTreeNode<T>* q, int
         {
             //这样可能在另一个子区域中存在更加近似的点
             kdTreeNode<T>* brother = almostNNode->getBrother();
-            brother->distance = q->calculateDistance(brother);
-            maintainMaxKHeap(knnList, brother, k);
+            if (brother != nullptr) {
+                brother->distance = q->calculateDistance(brother);
+                maintainMaxKHeap(knnList, brother, k);
+            }
         }
 
         almostNNode=almostNNode->parent; // 返回上一级
