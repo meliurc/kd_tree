@@ -74,11 +74,12 @@ kdTreeNode<float>* init_nodes(image<float>* smooth_r, image<float>* smooth_g, im
 //        *(data + dim*i+3) = imRef(smooth_g, y, x) / (float)255;       // normalize g by 255
 //        *(data + dim*i+4) = imRef(smooth_b, y, x) / (float)255;       // normalize b by 255
 
-        *(data + dim*i)   = 0.1*x;                           // normalize x by height
-        *(data + dim*i+1) = 0.1*y;                           // normalize y by width
-        *(data + dim*i+2) = imRef(smooth_r, y, x);       // normalize r by 255
-        *(data + dim*i+3) = imRef(smooth_g, y, x);       // normalize g by 255
-        *(data + dim*i+4) = imRef(smooth_b, y, x);       // normalize b by 255
+
+        *(data + dim*i) = imRef(smooth_r, y, x);       // normalize r by 255
+        *(data + dim*i+1) = imRef(smooth_g, y, x);       // normalize g by 255
+        *(data + dim*i+2) = imRef(smooth_b, y, x);       // normalize b by 255
+        *(data + dim*i+3) = 0.01*x;                           // normalize x by height
+        *(data + dim*i+4) = 0.1*y;                           // normalize y by width
     }
     for (int i=0; i<pixel_num*dim; i+=dim){
         node[i/dim] = kdTreeNode<float>(data+i, dim);
@@ -252,8 +253,8 @@ image<rgb> *segment_image(image<rgb> *im, float sigma, float c, int min_size,
 //            (edges + i * K + j)->w = nearestKNode[j]->distance;
 //            edge_num++;
 
-            (edges + i * K + j)->a = (int) round(queryNodeP->data[0] * 10 * width + queryNodeP->data[1] * 10);
-            (edges + i * K + j)->b = (int) round(nearestKNode[j]->data[0] * 10 * width + nearestKNode[j]->data[1] * 10);
+            (edges + i * K + j)->a = (int) round(queryNodeP->data[3] * 100 * width + queryNodeP->data[4] * 10);
+            (edges + i * K + j)->b = (int) round(nearestKNode[j]->data[3] * 100 * width + nearestKNode[j]->data[4] * 10);
             (edges + i * K + j)->w = nearestKNode[j]->distance;
             edge_num++;
         }
