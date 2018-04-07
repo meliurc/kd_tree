@@ -2,6 +2,11 @@
 #include<queue>
 #include "treeNode.h"
 
+/*!
+ * print node->data
+ * @tparam T
+ * @param root
+ */
 template <class T>
 void printNodeData(kdTreeNode<T>* root){
     std::cout << "data in node: (";
@@ -12,25 +17,31 @@ void printNodeData(kdTreeNode<T>* root){
             std::cout << root->data[i] << ")" << std::endl;
 }
 
+/*!
+ * print tree by level
+ * @tparam T
+ * @param root
+ */
 template <class T>
 void printTreeByLevel(kdTreeNode<T>* root)
 {
     std::queue<kdTreeNode<T>*> que;
-    kdTreeNode<T> *tmp; //保存队列岀队时的临时变量
-    if(root) //当头节点不为空时
+    kdTreeNode<T> *tmp;
+    if(root)
     {
         que.push(root);
         while(!que.empty())
         {
-            tmp=que.front(); //取队首元素
-            que.pop();  //岀队
+            tmp=que.front();
+            que.pop();
 
             std::cout << "partition dimension: " << tmp->partitionDim << ", ";
             printNodeData(tmp);
 
-            if(tmp->left)  //左子树非空时入队
+            // insert left and right node into queue if not null
+            if(tmp->left)
                 que.push(tmp->left);
-            if(tmp->right) //右子树非空时入队
+            if(tmp->right)
                 que.push(tmp->right);
         }
     }

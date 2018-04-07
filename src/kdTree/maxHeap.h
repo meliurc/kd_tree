@@ -19,7 +19,7 @@ void maintainMaxKHeap(std::vector<kdTreeNode<T>*> &heapVector, kdTreeNode<T>* ne
 
 
 /*!
- *
+ * insert one node to the root of heap, then maintain heap.
  * @tparam T
  * @param heapVector
  * @param newNode
@@ -48,7 +48,7 @@ void maxHeapFixDown(std::vector<kdTreeNode<T>*> &heapVector, kdTreeNode<T>* newN
 }
 
 /*!
- *
+ * insert one node to last of heap, then maintain the heap.
  * @tparam T
  * @param heapVector
  * @param newNode
@@ -58,7 +58,7 @@ void maxHeapFixUp(std::vector<kdTreeNode<T>*> &heapVector, kdTreeNode<T>* newNod
 {
     heapVector.push_back(newNode);
     int j=heapVector.size()-1;
-    int i=(j+1)/2-1;//i是parent节点
+    int i=(j+1)/2-1;
     while(i>=0)
     {
 
@@ -75,7 +75,7 @@ void maxHeapFixUp(std::vector<kdTreeNode<T>*> &heapVector, kdTreeNode<T>* newNod
 }
 
 /*!
- *
+ * maintain a max heap of K nodes.
  * @tparam T
  * @param heapVector
  * @param newNode
@@ -86,10 +86,9 @@ void maintainMaxKHeap(std::vector<kdTreeNode<T>*> &heapVector, kdTreeNode<T>* ne
 {
     if(heapVector.size()<k)
     {
-        maxHeapFixUp(heapVector, newNode);//不足k个堆   直接向上修复
+        maxHeapFixUp(heapVector, newNode);   // when heap is not full
     }else if(newNode->distance < heapVector[0]->distance){
-        //比堆顶的要小   还需要向下修复 覆盖堆顶
-        maxHeapFixDown(heapVector, newNode);
+        maxHeapFixDown(heapVector, newNode); // when heap is full and new distance is smaller
     }
 }
 

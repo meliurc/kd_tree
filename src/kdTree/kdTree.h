@@ -79,12 +79,12 @@ kdTreeNode<T>* findMedian(kdTreeNode<T> *start, kdTreeNode<T> *end, int index)
 }
 
 /*!
- *
+ * build KD tree
  * @tparam T
- * @param t
- * @param len, number of nodes or number of pixels in an image
- * @param i
- * @param dim
+ * @param t: pointer to the first node of node list.
+ * @param len: number of nodes or number of pixels in an image.
+ * @param i: partitioned by ith dimension.
+ * @param dim: length of node->data.
  * @return
  */
 template <class T>

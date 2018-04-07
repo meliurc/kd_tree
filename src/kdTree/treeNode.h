@@ -47,7 +47,7 @@ template <class T>
 kdTreeNode<T>::~kdTreeNode(){}
 
 /*!
- * function calculateDistance
+ * calculate Euclidian distance between two nodes
  * @tparam T
  * @param node1
  * @param node2
@@ -62,6 +62,11 @@ float kdTreeNode<T>::calculateDistance(kdTreeNode<T>* anotherNode){
     return sqrt(distance);
 }
 
+/*!
+ * get brother node of current node
+ * @tparam T
+ * @return
+ */
 template <class T>
 kdTreeNode<T>* kdTreeNode<T>::getBrother(){
     if(this == this->parent->left)

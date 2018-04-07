@@ -7,9 +7,9 @@
 /*!
  * find the deepest leaf node that is within the same region as the query node.
  * @tparam T
- * @param root: root of KD tree
- * @param q: query node
- * @return leaf: the leaf node that is in the same region as the query node
+ * @param root: root of KD tree.
+ * @param q: query node.
+ * @return leaf: the leaf node that is in the same region as the query node.
  */
 template <class T>
 kdTreeNode<T>* searchLeaf(kdTreeNode<T>* root, kdTreeNode<T>* q)
@@ -56,11 +56,11 @@ kdTreeNode<T>* searchLeaf(kdTreeNode<T>* root, kdTreeNode<T>* q)
 }
 
 /*!
- * search for k nearest node to query node
+ * search for k nearest node to query node.
  * @tparam T
- * @param root: root of KD tree
- * @param q: query node
- * @param k: number of nearest node to search for
+ * @param root: root of KD tree.
+ * @param q: query node.
+ * @param k: number of nearest node to search for.
  * @return
  */
 template <class T>
