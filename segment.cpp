@@ -40,6 +40,6 @@ int main(int argc, char **argv) {
     int num_ccs = 0;
     image<rgb> *seg = segment_image(input, sigma, k, min_size, &num_ccs, xZoom, yZoom, segType, kdTreeType);
     savePPM(seg, output_image);
-    std::cout << "The photograph has been segmented into: " << num_ccs << " parts.";
+    std::cout << "The photograph has been segmented into " << num_ccs << " parts.";
 
 }
