@@ -60,7 +60,7 @@ static inline float diff(image<float> *r, image<float> *g, image<float> *b,
  */
 
 kdTreeNode<float>* init_nodes(image<float>* smooth_r, image<float>* smooth_g, image<float>* smooth_b,
-                               int width, int height){
+                               int width, int height, float xZoom, float yZoom){
     int dim = 5;
     size_t pixel_num = width*height;
     kdTreeNode<float>* node = (kdTreeNode<float>*) malloc(pixel_num * sizeof(kdTreeNode<float>));
@@ -69,11 +69,11 @@ kdTreeNode<float>* init_nodes(image<float>* smooth_r, image<float>* smooth_g, im
         int x = i / width;                                      // x, row number start from 0
         int y = i % width;                                      // y, column number start from 0
 
-        *(data + dim*i) = imRef(smooth_r, y, x);       // normalize r by 255
-        *(data + dim*i+1) = imRef(smooth_g, y, x);       // normalize g by 255
-        *(data + dim*i+2) = imRef(smooth_b, y, x);       // normalize b by 255
-        *(data + dim*i+3) = 0.01*x;                           // normalize x by height
-        *(data + dim*i+4) = 0.1*y;                           // normalize y by width
+        *(data + dim*i+0) = imRef(smooth_r, y, x);              // normalize r by 255
+        *(data + dim*i+1) = imRef(smooth_g, y, x);              // normalize g by 255
+        *(data + dim*i+2) = imRef(smooth_b, y, x);              // normalize b by 255
+        *(data + dim*i+3) = 1./xZoom * x;                              // normalize x by height
+        *(data + dim*i+4) = 1./yZoom * y;                              // normalize y by width
     }
     for (int i=0; i<pixel_num*dim; i+=dim){
         node[i/dim] = kdTreeNode<float>(data+i, dim);
@@ -141,20 +141,20 @@ edge* generate_edges_1(image<float>* smooth_r, image<float>* smooth_g, image<flo
  * @return
  */
 edge* generate_edges_2(image<float>* smooth_r, image<float>* smooth_g, image<float>* smooth_b,
-                       int width, int height, int &edge_num){
+                       int width, int height, int &edge_num, float xZoom, float yZoom, const char* kdTreeType){
     int pixel_num = width*height;
     int K = 10;
     int dim = 5;
-    kdTreeNode<float> *node = init_nodes(smooth_r, smooth_g, smooth_b, width, height);
-    kdTreeNode<float> *root = makeKdTree(node, pixel_num, 0, dim);
+    kdTreeNode<float> *node = init_nodes(smooth_r, smooth_g, smooth_b, width, height, xZoom, yZoom);
+    kdTreeNode<float> *root = makeKdTree(node, pixel_num, 0, dim, kdTreeType);
 
     edge* edges = new edge[K*pixel_num];
     for (int i=0; i<pixel_num; i++) {
         kdTreeNode<float> *queryNodeP = node + i;
         std::vector<kdTreeNode<float> *> nearestKNode = searchKNN(root, queryNodeP, K);
         for (int j = 0; j < nearestKNode.size(); j++) {
-            (edges + i * K + j)->a = (int) round(queryNodeP->data[3] * 100 * width + queryNodeP->data[4] * 10);
-            (edges + i * K + j)->b = (int) round(nearestKNode[j]->data[3] * 100 * width + nearestKNode[j]->data[4] * 10);
+            (edges + i * K + j)->a = (int) round(queryNodeP->data[3] * xZoom * width + queryNodeP->data[4] * yZoom);
+            (edges + i * K + j)->b = (int) round(nearestKNode[j]->data[3]  * xZoom * width + nearestKNode[j]->data[4] * yZoom);
             (edges + i * K + j)->w = nearestKNode[j]->distance;
             edge_num++;
         }
@@ -174,7 +174,7 @@ edge* generate_edges_2(image<float>* smooth_r, image<float>* smooth_g, image<flo
  * @num_ccs: number of connected components in the segmentation.
  */
 image<rgb> *segment_image(image<rgb> *im, float sigma, float c, int min_size,
-			  int *num_ccs, const char* type) {
+			  int *num_ccs, float xZoom, float yZoom, const char* segType, const char* kdTreeType) {
     edge* edges;
     int edge_num = 0;
     int width = im->width();
@@ -199,13 +199,10 @@ image<rgb> *segment_image(image<rgb> *im, float sigma, float c, int min_size,
     image<float> *smooth_b = smooth(b, sigma);
     delete r; delete g; delete b;
 
-    edge* (*generate_edges)(image<float>*, image<float>*, image<float>*, int, int, int &);
-    if (strcmp(type, "rgb") == 0)
-        generate_edges = generate_edges_1;
+    if (strcmp(segType, "rgb") == 0)
+        edges = generate_edges_1(smooth_r, smooth_g, smooth_b, width, height, edge_num);
     else
-        generate_edges = generate_edges_2;
-
-    edges = generate_edges(smooth_r, smooth_g, smooth_b, width, height, edge_num);
+        edges = generate_edges_2(smooth_r, smooth_g, smooth_b, width, height, edge_num, xZoom, yZoom, kdTreeType);
 
     delete smooth_r;
     delete smooth_g;

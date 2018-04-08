@@ -20,7 +20,42 @@ kdTreeNode<T>* findMedian(kdTreeNode<T> *start, kdTreeNode<T> *end, int index);
 template <class T>
 kdTreeNode<T>* makeKdTree(kdTreeNode<T> *t, int len, int i, int dim);
 
-// define
+
+template <class T>
+float calculateMean(kdTreeNode<T> *t, int len, int i, int dim){
+    float sum = 0;
+    for (int k=0; k<len; k++){
+        sum += t->data[k*dim + i];
+    }
+    return sum/len;
+}
+
+
+template <class T>
+float calculateVariance(kdTreeNode<T> *t, int len, int i, int dim){
+    float sum = 0;
+    float mean = calculateMean(t, len, i, dim);
+    for (int k=0; k<len; k++){
+        sum += (t->data[k*dim + i] - mean) * (t->data[k*dim + i] - mean);
+    }
+    return sum/len;
+}
+
+
+template <class T>
+int choosePartitionDim(kdTreeNode<T> *t, int len, int dim){
+    float maxVar = 0;
+    int maxIndex = 0;
+    for (int k=0; k<dim; k++){
+        float variance = calculateVariance(t, len, k, dim);
+        if (variance > maxVar){
+            maxVar = variance;
+            maxIndex = k;
+        }
+    }
+
+    return maxIndex;
+}
 
 /*!
  * swap data between two kdTreeNode
@@ -88,17 +123,23 @@ kdTreeNode<T>* findMedian(kdTreeNode<T> *start, kdTreeNode<T> *end, int index)
  * @return
  */
 template <class T>
-kdTreeNode<T>* makeKdTree(kdTreeNode<T> *t, int len, int i, int dim)
+kdTreeNode<T>* makeKdTree(kdTreeNode<T> *t, int len, int i, int dim, const char* type)
 {
     kdTreeNode<T> *root;
 
-    if (!len) return nullptr;
+    if (!len)
+        return nullptr;
+    else if (len == 1)
+        return t;
+
+    if (strcmp(type, "max_variance") == 0)
+        i = choosePartitionDim(t, len, dim);
 
     if ((root = findMedian(t, t + len, i))) {
         root->partitionDim = i;
         i = (i + 1) % dim;
-        root->left = makeKdTree(t, root - t, i, dim);
-        root->right = makeKdTree(root + 1, t + len - (root + 1), i, dim);
+        root->left = makeKdTree(t, root - t, i, dim, type);
+        root->right = makeKdTree(root + 1, t + len - (root + 1), i, dim, type);
     }
 
     // add pointer to parent
